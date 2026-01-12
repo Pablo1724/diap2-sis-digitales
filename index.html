@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capítulo 2: Compuertas Lógicas - Sistemas Digitales I</title>
+    <!-- Tailwind CSS para diseño moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconografía técnica -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --dark: #0f172a;
+            --accent: #f59e0b;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--dark);
+            color: #f8fafc;
+            margin: 0;
+            overflow: hidden; /* Control total de navegación por JS */
+            user-select: none;
+        }
+
+        /* Sistema de Diapositivas */
+        .slide-deck {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 2000px;
+        }
+
+        .slide {
+            position: absolute;
+            width: 92%;
+            height: 86%;
+            background: white;
+            color: var(--dark);
+            border-radius: 2.5rem;
+            padding: 3.5rem;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            opacity: 0;
+            transform: scale(0.95) rotateY(10deg);
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: scale(1) rotateY(0deg);
+            z-index: 10;
+        }
+
+        /* Barra de Progreso */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--success));
+            transition: width 0.4s ease;
+            z-index: 100;
+        }
+
+        /* Controles */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1.5rem;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 0.8rem 2.5rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
+        }
+
+        .btn-nav {
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-nav:hover:not(.disabled) {
+            background: var(--primary);
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-nav.disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .fs-btn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Tipografía y Estilos de Contenido */
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .concept-highlight {
+            border-left: 6px solid var(--primary);
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 0 1.5rem 1.5rem 0;
+        }
+
+        .logic-table th { background: #f1f5f9; text-align: center; padding: 0.75rem; border: 1px solid #e2e8f0; font-size: 0.8rem; }
+        .logic-table td { text-align: center; padding: 0.75rem; border: 1px solid #e2e8f0; font-family: 'JetBrains Mono'; font-weight: bold; }
+
+        .gate-symbol { width: 120px; height: auto; }
+
+        /* Animación de entrada */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal { animation: slideIn 0.8s ease-out forwards; }
+
+        @media (max-width: 768px) {
+            .slide { padding: 1.5rem; width: 95%; height: 90%; }
+            .hide-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <button class="fs-btn uppercase tracking-[0.2em]" onclick="toggleFullScreen()">
+        <i class="fas fa-expand-alt mr-2"></i> Pantalla Completa
+    </button>
+
+    <div class="slide-deck" id="deck">
+        
+        <!-- DIAPOSITIVA 1: PORTADA -->
+        <div class="slide active flex flex-col items-center justify-center text-center bg-gradient-to-br from-slate-900 to-blue-900 !text-white">
+            <div class="reveal">
+                <div class="mb-6 px-4 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-black tracking-[0.4em] uppercase inline-block">
+                    Facultad de Ingeniería - Sistemas Digitales I
+                </div>
+                <h1 class="text-6xl md:text-8xl font-black mb-4 tracking-tighter uppercase">Capítulo 2</h1>
+                <h2 class="text-3xl md:text-5xl font-light text-blue-100/80 mb-16 tracking-wide uppercase">Compuertas Lógicas</h2>
+                <div class="flex justify-center gap-12 text-slate-400">
+                    <div class="text-center"><i class="fas fa-microchip text-4xl mb-2"></i><p class="text-[10px] font-bold">HARDWARE</p></div>
+                    <div class="text-center"><i class="fas fa-project-diagram text-4xl mb-2"></i><p class="text-[10px] font-bold">LÓGICA</p></div>
+                    <div class="text-center"><i class="fas fa-vial text-4xl mb-2"></i><p class="text-[10px] font-bold">ANÁLISIS</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 2: 2.1 GENERALIDADES -->
+        <div class="slide">
+            <header class="flex justify-between items-start mb-12 border-b pb-8">
+                <div>
+                    <p class="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">Introducción</p>
+                    <h2 class="text-5xl font-extrabold text-slate-900">2.1 Generalidades</h2>
+                </div>
+                <i class="fas fa-info-circle text-4xl text-slate-200"></i>
+            </header>
+            <div class="grid lg:grid-cols-2 gap-16">
+                <div class="space-y-8 text-lg">
+                    <p class="text-slate-600 leading-relaxed">
+                        Las compuertas lógicas son los **bloques de construcción fundamentales** de los sistemas digitales. Actúan como interruptores electrónicos que procesan señales binarias.
+                    </p>
+                    <div class="concept-highlight">
+                        <h4 class="font-bold text-slate-800 mb-2">Niveles Lógicos:</h4>
+                        <ul class="space-y-4 text-slate-600 text-sm">
+                            <li class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded bg-blue-600 text-white flex items-center justify-center font-bold">1</span>
+                                <span>**Alto (High):** Representa "Verdadero" (típicamente 5V o 3.3V).</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded bg-slate-800 text-white flex items-center justify-center font-bold">0</span>
+                                <span>**Bajo (Low):** Representa "Falso" (típicamente 0V o Tierra).</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bg-slate-50 rounded-[3rem] p-12 flex items-center justify-center border-2 border-dashed border-slate-200">
+                    <div class="text-center">
+                        <i class="fas fa-bolt text-8xl text-blue-500 mb-8 opacity-20"></i>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest leading-loose">
+                            Operación Basada en<br>Álgebra de Boole
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 3: 2.2 COMPONENTES ELECTRÓNICOS BÁSICOS -->
+        <div class="slide">
+            <header class="flex justify-between items-start mb-12">
+                <div>
+                    <p class="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">Fundamentos Físicos</p>
+                    <h2 class="text-5xl font-extrabold text-slate-900">2.2 Componentes Básicos</h2>
+                </div>
+                <i class="fas fa-atom text-4xl text-slate-200"></i>
+            </header>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div class="space-y-6">
+                    <p class="text-slate-600">Para construir una compuerta lógica, utilizamos componentes de estado sólido, principalmente:</p>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="p-6 bg-white border rounded-2xl shadow-sm hover:border-blue-500 transition-all group">
+                            <h4 class="font-bold text-blue-700 flex items-center gap-3">
+                                <i class="fas fa-microchip"></i> Transistor (BJT o MOSFET)
+                            </h4>
+                            <p class="text-sm text-slate-500 mt-2">Funciona como un **interruptor controlado**. Es el corazón de la lógica digital.</p>
+                        </div>
+                        <div class="p-6 bg-white border rounded-2xl shadow-sm hover:border-blue-500 transition-all group">
+                            <h4 class="font-bold text-blue-700 flex items-center gap-3">
+                                <i class="fas fa-wave-square"></i> Diodos y Resistencias
+                            </h4>
+                            <p class="text-sm text-slate-500 mt-2">Utilizados para control de corriente y lógica de conmutación simple (DL - Diode Logic).</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-10 flex flex-col items-center justify-center text-center">
+                    <h5 class="text-sky-400 font-bold mb-6 text-sm uppercase tracking-widest">Modelo de Interruptor</h5>
+                    <!-- SVG Diagram switch logic -->
+                    <svg viewBox="0 0 200 120" class="w-64 h-auto">
+                        <line x1="20" y1="60" x2="80" y2="60" stroke="white" stroke-width="4" />
+                        <line x1="80" y1="60" x2="130" y2="30" stroke="#3b82f6" stroke-width="4" id="switch-arm" />
+                        <line x1="130" y1="60" x2="180" y2="60" stroke="white" stroke-width="4" />
+                        <circle cx="80" cy="60" r="6" fill="#1e40af" />
+                        <circle cx="130" cy="60" r="6" fill="#1e40af" />
+                    </svg>
+                    <p class="text-slate-400 text-xs mt-8">Transistor en Corte (Abierto) vs Saturación (Cerrado)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 4: 2.3 COMPUERTAS BÁSICAS (AND/OR) -->
+        <div class="slide">
+            <header class="mb-10 border-b pb-6">
+                <h2 class="text-5xl font-extrabold text-slate-900">2.3 Compuertas Básicas</h2>
+            </header>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- AND -->
+                <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col items-center text-center">
+                    <h3 class="text-2xl font-black text-blue-800 mb-6 uppercase tracking-widest">AND (Producto)</h3>
+                    <svg class="gate-symbol mb-8" viewBox="0 0 100 60">
+                        <path d="M20 10 L50 10 A20 20 0 0 1 50 50 L20 50 Z" fill="none" stroke="currentColor" stroke-width="3" class="text-blue-900"/>
+                        <line x1="5" y1="20" x2="20" y2="20" stroke="currentColor" stroke-width="2" class="text-blue-900"/>
+                        <line x1="5" y1="40" x2="20" y2="40" stroke="currentColor" stroke-width="2" class="text-blue-900"/>
+                        <line x1="70" y1="30" x2="95" y2="30" stroke="currentColor" stroke-width="2" class="text-blue-900"/>
+                    </svg>
+                    <table class="logic-table w-full">
+                        <tr><th>A</th><th>B</th><th>Q</th></tr>
+                        <tr><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><td>1</td><td>1</td><td class="text-blue-600">1</td></tr>
+                    </table>
+                    <p class="mt-6 text-sm font-bold text-blue-900 mono">Q = A · B</p>
+                </div>
+                <!-- OR -->
+                <div class="p-8 bg-indigo-50 rounded-3xl border border-indigo-100 flex flex-col items-center text-center">
+                    <h3 class="text-2xl font-black text-indigo-800 mb-6 uppercase tracking-widest">OR (Suma)</h3>
+                    <svg class="gate-symbol mb-8" viewBox="0 0 100 60">
+                        <path d="M20 10 C35 10 65 10 80 30 C65 50 35 50 20 50 C30 40 30 20 20 10 Z" fill="none" stroke="currentColor" stroke-width="3" class="text-indigo-900"/>
+                        <line x1="5" y1="20" x2="26" y2="20" stroke="currentColor" stroke-width="2" class="text-indigo-900"/>
+                        <line x1="5" y1="40" x2="26" y2="40" stroke="currentColor" stroke-width="2" class="text-indigo-900"/>
+                        <line x1="80" y1="30" x2="95" y2="30" stroke="currentColor" stroke-width="2" class="text-indigo-900"/>
+                    </svg>
+                    <table class="logic-table w-full">
+                        <tr><th>A</th><th>B</th><th>Q</th></tr>
+                        <tr><td>0</td><td>0</td><td>0</td></tr>
+                        <tr><td>1</td><td>0</td><td class="text-indigo-600">1</td></tr>
+                    </table>
+                    <p class="mt-6 text-sm font-bold text-indigo-900 mono">Q = A + B</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 5: 2.3 COMPUERTAS BÁSICAS (NOT) -->
+        <div class="slide">
+            <header class="mb-12">
+                <h2 class="text-5xl font-extrabold text-slate-900">El Inversor (NOT)</h2>
+            </header>
+            <div class="grid lg:grid-cols-2 gap-16 h-full items-center">
+                <div class="space-y-8">
+                    <p class="text-2xl text-slate-600 leading-relaxed">
+                        La compuerta NOT es un circuito con **una sola entrada** que produce el valor opuesto en su salida.
+                    </p>
+                    <div class="p-8 bg-rose-50 rounded-3xl border-2 border-rose-100 flex justify-between items-center">
+                        <div class="text-center px-6">
+                            <span class="text-xs font-black text-slate-400 block mb-2 uppercase">Entrada A</span>
+                            <span class="text-4xl font-black mono text-rose-600">1</span>
+                        </div>
+                        <i class="fas fa-arrow-right text-3xl text-rose-200"></i>
+                        <div class="text-center px-6">
+                            <span class="text-xs font-black text-slate-400 block mb-2 uppercase">Salida Q</span>
+                            <span class="text-4xl font-black mono text-slate-800">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-[3rem]">
+                    <svg class="w-48 h-auto mb-10" viewBox="0 0 100 60">
+                        <path d="M30 15 L60 30 L30 45 Z" fill="none" stroke="white" stroke-width="3"/>
+                        <circle cx="65" cy="30" r="5" fill="none" stroke="white" stroke-width="3"/>
+                        <line x1="10" y1="30" x2="30" y2="30" stroke="white" stroke-width="2"/>
+                        <line x1="70" y1="30" x2="95" y2="30" stroke="white" stroke-width="2"/>
+                    </svg>
+                    <p class="text-white mono text-xl font-bold">Q = Ā</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 6: 2.4 COMPUERTAS UNIVERSALES -->
+        <div class="slide">
+            <header class="flex justify-between items-start mb-12 border-b pb-8">
+                <div>
+                    <p class="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">Poder de Diseño</p>
+                    <h2 class="text-5xl font-extrabold text-slate-900">2.4 Compuertas Universales</h2>
+                </div>
+                <i class="fas fa-infinity text-4xl text-slate-200"></i>
+            </header>
+            <p class="text-xl text-slate-600 mb-10">Las compuertas **NAND** y **NOR** son llamadas universales porque cualquier función booleana puede ser construida únicamente con ellas.</p>
+            <div class="grid md:grid-cols-2 gap-10">
+                <div class="p-10 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group">
+                    <h3 class="text-2xl font-black text-sky-400 mb-4 uppercase">NAND (NOT-AND)</h3>
+                    <p class="text-sm opacity-70 mb-6">Salida 0 solo cuando todas las entradas son 1.</p>
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center mono text-lg">
+                        Q = <span class="border-t border-white">A · B</span>
+                    </div>
+                </div>
+                <div class="p-10 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group">
+                    <h3 class="text-2xl font-black text-amber-400 mb-4 uppercase">NOR (NOT-OR)</h3>
+                    <p class="text-sm opacity-70 mb-6">Salida 1 solo cuando todas las entradas son 0.</p>
+                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center mono text-lg">
+                        Q = <span class="border-t border-white">A + B</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-10 p-6 bg-blue-50 border-2 border-blue-100 rounded-3xl text-sm italic text-blue-900">
+                "El uso de una sola familia de compuertas (como la 74LS00) reduce costos de fabricación y simplifica el layout de los circuitos impresos."
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 7: 2.5 ANÁLISIS DE FUNCIONES COMPLEJAS -->
+        <div class="slide">
+            <header class="mb-12 border-b pb-6">
+                <h2 class="text-5xl font-extrabold text-slate-900">2.5 Análisis de Funciones</h2>
+            </header>
+            <div class="grid lg:grid-cols-2 gap-16">
+                <div class="space-y-8 flex flex-col justify-center">
+                    <p class="text-xl text-slate-600 leading-relaxed">Combinando compuertas básicas, podemos representar expresiones booleanas de cualquier complejidad.</p>
+                    <div class="concept-highlight">
+                        <h4 class="font-bold text-slate-800 mb-4">Pasos para el Análisis:</h4>
+                        <ol class="space-y-3 text-slate-600 text-sm">
+                            <li class="flex gap-3"><b>1.</b> Identificar los términos de la expresión.</li>
+                            <li class="flex gap-3"><b>2.</b> Dibujar las compuertas de primer nivel (entradas).</li>
+                            <li class="flex gap-3"><b>3.</b> Conectar las salidas a compuertas de suma o producto finales.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border-2 rounded-[3rem] p-10 flex items-center justify-center">
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">Ejemplo Visual</p>
+                        <!-- SVG complex function diagram -->
+                        <svg viewBox="0 0 200 120" class="w-full h-auto">
+                            <rect x="40" y="20" width="30" height="20" rx="4" fill="#3b82f6" opacity="0.3" />
+                            <rect x="40" y="80" width="30" height="20" rx="4" fill="#3b82f6" opacity="0.3" />
+                            <path d="M120 40 C140 40 160 50 180 60 C160 70 140 80 120 80 C130 70 130 50 120 40" fill="#1e40af" />
+                            <line x1="70" y1="30" x2="120" y2="50" stroke="#94a3b8" stroke-width="2" />
+                            <line x1="70" y1="90" x2="120" y2="70" stroke="#94a3b8" stroke-width="2" />
+                        </svg>
+                        <p class="text-sm font-bold text-blue-600 mt-6 mono uppercase">F = (A·B) + (C·D)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 8: EJEMPLOS Y APLICACIONES -->
+        <div class="slide">
+            <h2 class="text-4xl font-extrabold text-slate-900 mb-10">Aplicaciones Prácticas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 bg-slate-50 border rounded-3xl text-center card-hover transition-all">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-shield-alt"></i></div>
+                    <h4 class="font-bold mb-2">Sistemas de Alarma</h4>
+                    <p class="text-xs text-slate-500 leading-loose">Uso de compuertas OR para activar una sirena si se abre la puerta O la ventana.</p>
+                </div>
+                <div class="p-8 bg-slate-50 border rounded-3xl text-center card-hover transition-all">
+                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-lock"></i></div>
+                    <h4 class="font-bold mb-2">Cerraduras Digitales</h4>
+                    <p class="text-xs text-slate-500 leading-loose">Lógica AND: Solo abre si la clave es correcta Y se presiona el botón de inicio.</p>
+                </div>
+                <div class="p-8 bg-slate-50 border rounded-3xl text-center card-hover transition-all">
+                    <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-server"></i></div>
+                    <h4 class="font-bold mb-2">Unidades Aritméticas</h4>
+                    <p class="text-xs text-slate-500 leading-loose">Sistemas de control industrial y procesamiento de datos en CPUs.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAPOSITIVA 9: CIERRE -->
+        <div class="slide bg-slate-900 !text-white flex flex-col items-center justify-center text-center">
+            <h2 class="text-6xl font-black mb-8 tracking-tighter">Fin del Capítulo 2</h2>
+            <div class="w-24 h-2 bg-blue-500 rounded-full mb-12"></div>
+            <p class="text-slate-400 max-w-xl mx-auto mb-16 leading-relaxed">
+                Ahora comprendemos la naturaleza física de la lógica. En el siguiente capítulo, exploraremos las herramientas matemáticas para simplificar estos circuitos.
+            </p>
+            <button onclick="goToSlide(0)" class="px-10 py-4 bg-blue-600 rounded-full font-black hover:bg-blue-500 transition-all shadow-2xl uppercase tracking-widest text-sm">REINICIAR PRESENTACIÓN</button>
+        </div>
+
+    </div>
+
+    <!-- Barra de Controles Inferior -->
+    <div class="controls">
+        <button class="btn-nav" id="prevBtn" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+        <div class="flex items-center text-white px-2 font-black text-sm mono">
+            <span id="slideCounter">1</span> / 9
+        </div>
+        <button class="btn-nav" id="nextBtn" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        // --- MOTOR DE DIAPOSITIVAS ---
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        /**
+         * Actualiza el estado visual de la presentación
+         */
+        function updateSlide() {
+            slides.forEach((s, i) => {
+                s.classList.toggle('active', i === currentSlide);
+            });
+            
+            // Barra de progreso
+            const percent = ((currentSlide + 1) / slides.length) * 100;
+            progressBar.style.width = percent + "%";
+            
+            // Contador UI
+            slideCounter.innerText = currentSlide + 1;
+
+            // Estados de botones
+            prevBtn.classList.toggle('disabled', currentSlide === 0);
+            nextBtn.classList.toggle('disabled', currentSlide === slides.length - 1);
+            
+            // Reiniciar scroll interno
+            slides[currentSlide].scrollTop = 0;
+        }
+
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; updateSlide(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+        function goToSlide(n) { currentSlide = n; updateSlide(); }
+
+        // Navegación teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowRight" || e.key === " ") nextSlide();
+            if (e.key === "ArrowLeft") prevSlide();
+        });
+
+        // Pantalla completa
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error FS: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // Inicialización
+        updateSlide();
+    </script>
+</body>
+</html>
