@@ -3,501 +3,506 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capítulo 2: Compuertas Lógicas - Sistemas Digitales I</title>
-    <!-- Tailwind CSS para diseño moderno y responsivo -->
+    <title>Fundamentos: Compuertas Lógicas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para iconografía técnica -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-        
         :root {
-            --primary: #2563eb;
-            --secondary: #3b82f6;
-            --dark: #0f172a;
-            --accent: #f59e0b;
-            --success: #10b981;
+            --bg-color: #ffffff;
+            --text-main: #1e293b;
+            --accent: #2563eb;
+            --subtle: #f1f5f9;
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--dark);
-            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
             margin: 0;
-            overflow: hidden; /* Control total de navegación por JS */
-            user-select: none;
         }
 
-        /* Sistema de Diapositivas */
-        .slide-deck {
-            height: 100vh;
+        .mono { font-family: 'Fira Code', monospace; }
+
+        /* Slide System */
+        .slide-container {
             width: 100vw;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 2000px;
+            height: 100vh;
+            position: relative;
         }
 
         .slide {
             position: absolute;
-            width: 92%;
-            height: 86%;
-            background: white;
-            color: var(--dark);
-            border-radius: 2.5rem;
-            padding: 3.5rem;
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
-            display: none;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
             flex-direction: column;
-            transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            justify-content: center;
+            padding: 4rem 6rem;
             opacity: 0;
-            transform: scale(0.95) rotateY(10deg);
-            overflow-y: auto;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            visibility: hidden;
         }
 
         .slide.active {
-            display: flex;
             opacity: 1;
-            transform: scale(1) rotateY(0deg);
+            transform: translateY(0);
+            pointer-events: all;
+            visibility: visible;
             z-index: 10;
         }
 
-        /* Barra de Progreso */
-        .progress-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 6px;
-            background: linear-gradient(to right, var(--primary), var(--success));
-            transition: width 0.4s ease;
-            z-index: 100;
+        /* Componentes Visuales */
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
         }
+        
+        .truth-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+        .truth-table th { text-align: left; padding: 0.75rem; border-bottom: 2px solid #e2e8f0; color: #64748b; }
+        .truth-table td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; }
+        .truth-table .result-1 { color: #16a34a; font-weight: bold; }
+        .truth-table .result-0 { color: #cbd5e1; }
 
-        /* Controles */
-        .controls {
+        .gate-svg { width: 100%; height: auto; max-width: 180px; stroke: #1e293b; fill: none; stroke-width: 2.5; }
+
+        /* Controles Minimalistas */
+        .nav-controls {
             position: fixed;
             bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 2rem;
             display: flex;
-            gap: 1.5rem;
-            background: rgba(15, 23, 42, 0.95);
-            padding: 0.8rem 2.5rem;
-            border-radius: 9999px;
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 0.5rem;
             z-index: 100;
         }
-
-        .btn-nav {
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .nav-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            width: 40px; height: 40px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
+        .nav-btn:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
 
-        .btn-nav:hover:not(.disabled) {
-            background: var(--primary);
-            transform: scale(1.15);
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
-        }
-
-        .btn-nav.disabled { opacity: 0.2; cursor: not-allowed; }
-
-        .fs-btn {
+        .progress-bar {
             position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.8rem;
-            font-size: 0.75rem;
-            font-weight: 800;
-            cursor: pointer;
+            top: 0; left: 0;
+            height: 4px;
+            background: #2563eb;
+            width: 0%;
+            transition: width 0.4s ease;
             z-index: 100;
-            transition: 0.3s;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Tipografía y Estilos de Contenido */
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        .concept-highlight {
-            border-left: 6px solid var(--primary);
-            background: #f1f5f9;
-            padding: 1.5rem;
-            border-radius: 0 1.5rem 1.5rem 0;
-        }
-
-        .logic-table th { background: #f1f5f9; text-align: center; padding: 0.75rem; border: 1px solid #e2e8f0; font-size: 0.8rem; }
-        .logic-table td { text-align: center; padding: 0.75rem; border: 1px solid #e2e8f0; font-family: 'JetBrains Mono'; font-weight: bold; }
-
-        .gate-symbol { width: 120px; height: auto; }
-
-        /* Animación de entrada */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .reveal { animation: slideIn 0.8s ease-out forwards; }
-
-        @media (max-width: 768px) {
-            .slide { padding: 1.5rem; width: 95%; height: 90%; }
-            .hide-mobile { display: none; }
         }
     </style>
 </head>
 <body>
 
     <div class="progress-bar" id="progressBar"></div>
-    
-    <button class="fs-btn uppercase tracking-[0.2em]" onclick="toggleFullScreen()">
-        <i class="fas fa-expand-alt mr-2"></i> Pantalla Completa
-    </button>
 
-    <div class="slide-deck" id="deck">
-        
-        <!-- DIAPOSITIVA 1: PORTADA -->
-        <div class="slide active flex flex-col items-center justify-center text-center bg-gradient-to-br from-slate-900 to-blue-900 !text-white">
-            <div class="reveal">
-                <div class="mb-6 px-4 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-black tracking-[0.4em] uppercase inline-block">
-                    Facultad de Ingeniería - Sistemas Digitales I
-                </div>
-                <h1 class="text-6xl md:text-8xl font-black mb-4 tracking-tighter uppercase">Capítulo 2</h1>
-                <h2 class="text-3xl md:text-5xl font-light text-blue-100/80 mb-16 tracking-wide uppercase">Compuertas Lógicas</h2>
-                <div class="flex justify-center gap-12 text-slate-400">
-                    <div class="text-center"><i class="fas fa-microchip text-4xl mb-2"></i><p class="text-[10px] font-bold">HARDWARE</p></div>
-                    <div class="text-center"><i class="fas fa-project-diagram text-4xl mb-2"></i><p class="text-[10px] font-bold">LÓGICA</p></div>
-                    <div class="text-center"><i class="fas fa-vial text-4xl mb-2"></i><p class="text-[10px] font-bold">ANÁLISIS</p></div>
+    <div class="nav-controls">
+        <button class="nav-btn" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+        <span class="flex items-center px-3 font-mono text-xs text-slate-400" id="slideCounter">1/8</span>
+        <button class="nav-btn" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+        <button class="nav-btn" onclick="toggleFullScreen()"><i class="fas fa-expand"></i></button>
+    </div>
+
+    <div class="slide-container">
+
+        <!-- SLIDE 1: PORTADA -->
+        <div class="slide active">
+            <div class="max-w-4xl">
+                <p class="text-blue-600 font-bold tracking-widest text-sm uppercase mb-4">Sistemas Digitales I</p>
+                <h1 class="text-6xl font-bold text-slate-900 mb-6 leading-tight">
+                    Lógica Binaria:<br>
+                    <span class="text-slate-400 font-normal">Del concepto físico a la decisión digital.</span>
+                </h1>
+                <div class="flex gap-8 mt-12 text-slate-500 text-sm">
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 bg-blue-500 rounded-full"></div>Compuertas Básicas</div>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 bg-emerald-500 rounded-full"></div>Tablas de Verdad</div>
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 bg-amber-500 rounded-full"></div>Universalidad</div>
                 </div>
             </div>
         </div>
 
-        <!-- DIAPOSITIVA 2: 2.1 GENERALIDADES -->
+        <!-- SLIDE 2: CONCEPTO FUNDAMENTAL -->
         <div class="slide">
-            <header class="flex justify-between items-start mb-12 border-b pb-8">
+            <div class="grid md:grid-cols-2 gap-16 items-center max-w-6xl w-full">
                 <div>
-                    <p class="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">Introducción</p>
-                    <h2 class="text-5xl font-extrabold text-slate-900">2.1 Generalidades</h2>
-                </div>
-                <i class="fas fa-info-circle text-4xl text-slate-200"></i>
-            </header>
-            <div class="grid lg:grid-cols-2 gap-16">
-                <div class="space-y-8 text-lg">
-                    <p class="text-slate-600 leading-relaxed">
-                        Las compuertas lógicas son los **bloques de construcción fundamentales** de los sistemas digitales. Actúan como interruptores electrónicos que procesan señales binarias.
+                    <h2 class="text-3xl font-bold mb-6">¿Qué es una Compuerta Lógica?</h2>
+                    <p class="text-lg text-slate-600 mb-6 leading-relaxed">
+                        Es el bloque fundamental de la electrónica digital. Físicamente, es un arreglo de transistores que toma decisiones basadas en niveles de voltaje.
                     </p>
-                    <div class="concept-highlight">
-                        <h4 class="font-bold text-slate-800 mb-2">Niveles Lógicos:</h4>
-                        <ul class="space-y-4 text-slate-600 text-sm">
-                            <li class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded bg-blue-600 text-white flex items-center justify-center font-bold">1</span>
-                                <span>**Alto (High):** Representa "Verdadero" (típicamente 5V o 3.3V).</span>
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded bg-slate-800 text-white flex items-center justify-center font-bold">0</span>
-                                <span>**Bajo (Low):** Representa "Falso" (típicamente 0V o Tierra).</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="bg-slate-50 rounded-[3rem] p-12 flex items-center justify-center border-2 border-dashed border-slate-200">
-                    <div class="text-center">
-                        <i class="fas fa-bolt text-8xl text-blue-500 mb-8 opacity-20"></i>
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest leading-loose">
-                            Operación Basada en<br>Álgebra de Boole
+                    <div class="bg-slate-50 p-6 rounded-lg border-l-4 border-blue-500">
+                        <h4 class="font-bold text-sm text-slate-800 mb-2 uppercase tracking-wide">La Regla de Oro</h4>
+                        <p class="text-sm text-slate-600">
+                            Recibe señales de entrada (Preguntas), aplica una regla lógica fija, y entrega una única salida (Respuesta).
                         </p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- DIAPOSITIVA 3: 2.2 COMPONENTES ELECTRÓNICOS BÁSICOS -->
-        <div class="slide">
-            <header class="flex justify-between items-start mb-12">
-                <div>
-                    <p class="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">Fundamentos Físicos</p>
-                    <h2 class="text-5xl font-extrabold text-slate-900">2.2 Componentes Básicos</h2>
-                </div>
-                <i class="fas fa-atom text-4xl text-slate-200"></i>
-            </header>
-            <div class="grid md:grid-cols-2 gap-12">
-                <div class="space-y-6">
-                    <p class="text-slate-600">Para construir una compuerta lógica, utilizamos componentes de estado sólido, principalmente:</p>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="p-6 bg-white border rounded-2xl shadow-sm hover:border-blue-500 transition-all group">
-                            <h4 class="font-bold text-blue-700 flex items-center gap-3">
-                                <i class="fas fa-microchip"></i> Transistor (BJT o MOSFET)
-                            </h4>
-                            <p class="text-sm text-slate-500 mt-2">Funciona como un **interruptor controlado**. Es el corazón de la lógica digital.</p>
+                <div class="bg-white p-10 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
+                    <!-- Abstracción visual -->
+                    <div class="flex items-center gap-4 w-full justify-center">
+                        <div class="text-right space-y-4">
+                            <div class="bg-slate-100 px-3 py-1 rounded text-xs font-mono">Entrada A</div>
+                            <div class="bg-slate-100 px-3 py-1 rounded text-xs font-mono">Entrada B</div>
                         </div>
-                        <div class="p-6 bg-white border rounded-2xl shadow-sm hover:border-blue-500 transition-all group">
-                            <h4 class="font-bold text-blue-700 flex items-center gap-3">
-                                <i class="fas fa-wave-square"></i> Diodos y Resistencias
-                            </h4>
-                            <p class="text-sm text-slate-500 mt-2">Utilizados para control de corriente y lógica de conmutación simple (DL - Diode Logic).</p>
+                        <div class="w-24 h-24 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                            <i class="fas fa-microchip text-3xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded text-xs font-mono font-bold">Salida Q</div>
                         </div>
                     </div>
-                </div>
-                <div class="bg-slate-900 rounded-3xl p-10 flex flex-col items-center justify-center text-center">
-                    <h5 class="text-sky-400 font-bold mb-6 text-sm uppercase tracking-widest">Modelo de Interruptor</h5>
-                    <!-- SVG Diagram switch logic -->
-                    <svg viewBox="0 0 200 120" class="w-64 h-auto">
-                        <line x1="20" y1="60" x2="80" y2="60" stroke="white" stroke-width="4" />
-                        <line x1="80" y1="60" x2="130" y2="30" stroke="#3b82f6" stroke-width="4" id="switch-arm" />
-                        <line x1="130" y1="60" x2="180" y2="60" stroke="white" stroke-width="4" />
-                        <circle cx="80" cy="60" r="6" fill="#1e40af" />
-                        <circle cx="130" cy="60" r="6" fill="#1e40af" />
-                    </svg>
-                    <p class="text-slate-400 text-xs mt-8">Transistor en Corte (Abierto) vs Saturación (Cerrado)</p>
+                    <p class="mt-8 text-xs text-slate-400 font-mono text-center">Modelo de "Caja Negra"</p>
                 </div>
             </div>
         </div>
 
-        <!-- DIAPOSITIVA 4: 2.3 COMPUERTAS BÁSICAS (AND/OR) -->
+        <!-- SLIDE 3: AND -->
         <div class="slide">
-            <header class="mb-10 border-b pb-6">
-                <h2 class="text-5xl font-extrabold text-slate-900">2.3 Compuertas Básicas</h2>
-            </header>
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- AND -->
-                <div class="p-8 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col items-center text-center">
-                    <h3 class="text-2xl font-black text-blue-800 mb-6 uppercase tracking-widest">AND (Producto)</h3>
-                    <svg class="gate-symbol mb-8" viewBox="0 0 100 60">
-                        <path d="M20 10 L50 10 A20 20 0 0 1 50 50 L20 50 Z" fill="none" stroke="currentColor" stroke-width="3" class="text-blue-900"/>
-                        <line x1="5" y1="20" x2="20" y2="20" stroke="currentColor" stroke-width="2" class="text-blue-900"/>
-                        <line x1="5" y1="40" x2="20" y2="40" stroke="currentColor" stroke-width="2" class="text-blue-900"/>
-                        <line x1="70" y1="30" x2="95" y2="30" stroke="currentColor" stroke-width="2" class="text-blue-900"/>
-                    </svg>
-                    <table class="logic-table w-full">
-                        <tr><th>A</th><th>B</th><th>Q</th></tr>
-                        <tr><td>0</td><td>0</td><td>0</td></tr>
-                        <tr><td>1</td><td>1</td><td class="text-blue-600">1</td></tr>
-                    </table>
-                    <p class="mt-6 text-sm font-bold text-blue-900 mono">Q = A · B</p>
-                </div>
-                <!-- OR -->
-                <div class="p-8 bg-indigo-50 rounded-3xl border border-indigo-100 flex flex-col items-center text-center">
-                    <h3 class="text-2xl font-black text-indigo-800 mb-6 uppercase tracking-widest">OR (Suma)</h3>
-                    <svg class="gate-symbol mb-8" viewBox="0 0 100 60">
-                        <path d="M20 10 C35 10 65 10 80 30 C65 50 35 50 20 50 C30 40 30 20 20 10 Z" fill="none" stroke="currentColor" stroke-width="3" class="text-indigo-900"/>
-                        <line x1="5" y1="20" x2="26" y2="20" stroke="currentColor" stroke-width="2" class="text-indigo-900"/>
-                        <line x1="5" y1="40" x2="26" y2="40" stroke="currentColor" stroke-width="2" class="text-indigo-900"/>
-                        <line x1="80" y1="30" x2="95" y2="30" stroke="currentColor" stroke-width="2" class="text-indigo-900"/>
-                    </svg>
-                    <table class="logic-table w-full">
-                        <tr><th>A</th><th>B</th><th>Q</th></tr>
-                        <tr><td>0</td><td>0</td><td>0</td></tr>
-                        <tr><td>1</td><td>0</td><td class="text-indigo-600">1</td></tr>
-                    </table>
-                    <p class="mt-6 text-sm font-bold text-indigo-900 mono">Q = A + B</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- DIAPOSITIVA 5: 2.3 COMPUERTAS BÁSICAS (NOT) -->
-        <div class="slide">
-            <header class="mb-12">
-                <h2 class="text-5xl font-extrabold text-slate-900">El Inversor (NOT)</h2>
-            </header>
-            <div class="grid lg:grid-cols-2 gap-16 h-full items-center">
-                <div class="space-y-8">
-                    <p class="text-2xl text-slate-600 leading-relaxed">
-                        La compuerta NOT es un circuito con **una sola entrada** que produce el valor opuesto en su salida.
+            <h2 class="text-3xl font-bold mb-2">Compuerta AND</h2>
+            <p class="text-slate-500 mb-10 text-lg">La lógica de la "Totalidad".</p>
+            
+            <div class="grid md:grid-cols-3 gap-8 w-full max-w-6xl">
+                <!-- Concepto -->
+                <div class="card col-span-1">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-blue-500"></i> Lógica
+                    </h3>
+                    <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                        La salida es VERDADERA (1) solo si <strong>TODAS</strong> las entradas son verdaderas simultáneamente.
                     </p>
-                    <div class="p-8 bg-rose-50 rounded-3xl border-2 border-rose-100 flex justify-between items-center">
-                        <div class="text-center px-6">
-                            <span class="text-xs font-black text-slate-400 block mb-2 uppercase">Entrada A</span>
-                            <span class="text-4xl font-black mono text-rose-600">1</span>
-                        </div>
-                        <i class="fas fa-arrow-right text-3xl text-rose-200"></i>
-                        <div class="text-center px-6">
-                            <span class="text-xs font-black text-slate-400 block mb-2 uppercase">Salida Q</span>
-                            <span class="text-4xl font-black mono text-slate-800">0</span>
-                        </div>
+                    <div class="bg-blue-50 p-3 rounded text-xs text-blue-800 font-medium">
+                        Analogía: Para usar un cajero automático necesitas la Tarjeta <strong>Y</strong> el PIN.
                     </div>
                 </div>
-                <div class="flex flex-col items-center justify-center p-12 bg-slate-900 rounded-[3rem]">
-                    <svg class="w-48 h-auto mb-10" viewBox="0 0 100 60">
-                        <path d="M30 15 L60 30 L30 45 Z" fill="none" stroke="white" stroke-width="3"/>
-                        <circle cx="65" cy="30" r="5" fill="none" stroke="white" stroke-width="3"/>
-                        <line x1="10" y1="30" x2="30" y2="30" stroke="white" stroke-width="2"/>
-                        <line x1="70" y1="30" x2="95" y2="30" stroke="white" stroke-width="2"/>
+
+                <!-- Símbolo -->
+                <div class="card col-span-1 flex flex-col items-center justify-center">
+                    <svg viewBox="0 0 100 60" class="gate-svg mb-4">
+                        <path d="M20 10 L50 10 A20 20 0 0 1 50 50 L20 50 Z" />
+                        <line x1="0" y1="20" x2="20" y2="20" />
+                        <line x1="0" y1="40" x2="20" y2="40" />
+                        <line x1="70" y1="30" x2="100" y2="30" />
                     </svg>
-                    <p class="text-white mono text-xl font-bold">Q = Ā</p>
+                    <span class="mono text-xs text-slate-400">Símbolo ANSI</span>
+                </div>
+
+                <!-- Tabla -->
+                <div class="card col-span-1">
+                    <table class="truth-table">
+                        <thead><tr><th>A</th><th>B</th><th>Q (A·B)</th></tr></thead>
+                        <tbody>
+                            <tr><td>0</td><td>0</td><td class="result-0">0</td></tr>
+                            <tr><td>0</td><td>1</td><td class="result-0">0</td></tr>
+                            <tr><td>1</td><td>0</td><td class="result-0">0</td></tr>
+                            <tr class="bg-blue-50/50"><td>1</td><td>1</td><td class="result-1">1</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- DIAPOSITIVA 6: 2.4 COMPUERTAS UNIVERSALES -->
+        <!-- SLIDE 4: OR -->
         <div class="slide">
-            <header class="flex justify-between items-start mb-12 border-b pb-8">
-                <div>
-                    <p class="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-2">Poder de Diseño</p>
-                    <h2 class="text-5xl font-extrabold text-slate-900">2.4 Compuertas Universales</h2>
-                </div>
-                <i class="fas fa-infinity text-4xl text-slate-200"></i>
-            </header>
-            <p class="text-xl text-slate-600 mb-10">Las compuertas **NAND** y **NOR** son llamadas universales porque cualquier función booleana puede ser construida únicamente con ellas.</p>
-            <div class="grid md:grid-cols-2 gap-10">
-                <div class="p-10 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group">
-                    <h3 class="text-2xl font-black text-sky-400 mb-4 uppercase">NAND (NOT-AND)</h3>
-                    <p class="text-sm opacity-70 mb-6">Salida 0 solo cuando todas las entradas son 1.</p>
-                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center mono text-lg">
-                        Q = <span class="border-t border-white">A · B</span>
+            <h2 class="text-3xl font-bold mb-2">Compuerta OR</h2>
+            <p class="text-slate-500 mb-10 text-lg">La lógica de la "Alternativa".</p>
+            
+            <div class="grid md:grid-cols-3 gap-8 w-full max-w-6xl">
+                <!-- Concepto -->
+                <div class="card col-span-1">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-random text-emerald-500"></i> Lógica
+                    </h3>
+                    <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                        La salida es VERDADERA (1) si <strong>AL MENOS UNA</strong> de las entradas es verdadera.
+                    </p>
+                    <div class="bg-emerald-50 p-3 rounded text-xs text-emerald-800 font-medium">
+                        Analogía: Entras al cine si tienes el boleto digital <strong>O</strong> el boleto impreso.
                     </div>
                 </div>
-                <div class="p-10 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden group">
-                    <h3 class="text-2xl font-black text-amber-400 mb-4 uppercase">NOR (NOT-OR)</h3>
-                    <p class="text-sm opacity-70 mb-6">Salida 1 solo cuando todas las entradas son 0.</p>
-                    <div class="p-4 bg-white/5 border border-white/10 rounded-xl text-center mono text-lg">
-                        Q = <span class="border-t border-white">A + B</span>
-                    </div>
+
+                <!-- Símbolo -->
+                <div class="card col-span-1 flex flex-col items-center justify-center">
+                    <svg viewBox="0 0 100 60" class="gate-svg mb-4">
+                        <path d="M20 10 C35 10 65 10 80 30 C65 50 35 50 20 50 C30 40 30 20 20 10 Z" />
+                        <line x1="0" y1="20" x2="25" y2="20" />
+                        <line x1="0" y1="40" x2="25" y2="40" />
+                        <line x1="80" y1="30" x2="100" y2="30" />
+                    </svg>
+                    <span class="mono text-xs text-slate-400">Símbolo ANSI</span>
                 </div>
-            </div>
-            <div class="mt-10 p-6 bg-blue-50 border-2 border-blue-100 rounded-3xl text-sm italic text-blue-900">
-                "El uso de una sola familia de compuertas (como la 74LS00) reduce costos de fabricación y simplifica el layout de los circuitos impresos."
+
+                <!-- Tabla -->
+                <div class="card col-span-1">
+                    <table class="truth-table">
+                        <thead><tr><th>A</th><th>B</th><th>Q (A+B)</th></tr></thead>
+                        <tbody>
+                            <tr><td>0</td><td>0</td><td class="result-0">0</td></tr>
+                            <tr class="bg-emerald-50/30"><td>0</td><td>1</td><td class="result-1">1</td></tr>
+                            <tr class="bg-emerald-50/30"><td>1</td><td>0</td><td class="result-1">1</td></tr>
+                            <tr class="bg-emerald-50/30"><td>1</td><td>1</td><td class="result-1">1</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- DIAPOSITIVA 7: 2.5 ANÁLISIS DE FUNCIONES COMPLEJAS -->
+        <!-- SLIDE 5: NOT -->
         <div class="slide">
-            <header class="mb-12 border-b pb-6">
-                <h2 class="text-5xl font-extrabold text-slate-900">2.5 Análisis de Funciones</h2>
-            </header>
-            <div class="grid lg:grid-cols-2 gap-16">
-                <div class="space-y-8 flex flex-col justify-center">
-                    <p class="text-xl text-slate-600 leading-relaxed">Combinando compuertas básicas, podemos representar expresiones booleanas de cualquier complejidad.</p>
-                    <div class="concept-highlight">
-                        <h4 class="font-bold text-slate-800 mb-4">Pasos para el Análisis:</h4>
-                        <ol class="space-y-3 text-slate-600 text-sm">
-                            <li class="flex gap-3"><b>1.</b> Identificar los términos de la expresión.</li>
-                            <li class="flex gap-3"><b>2.</b> Dibujar las compuertas de primer nivel (entradas).</li>
-                            <li class="flex gap-3"><b>3.</b> Conectar las salidas a compuertas de suma o producto finales.</li>
-                        </ol>
+            <h2 class="text-3xl font-bold mb-2">Compuerta NOT</h2>
+            <p class="text-slate-500 mb-10 text-lg">La lógica de la "Inversión".</p>
+            
+            <div class="grid md:grid-cols-3 gap-8 w-full max-w-6xl">
+                <!-- Concepto -->
+                <div class="card col-span-1">
+                    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-exchange-alt text-amber-500"></i> Lógica
+                    </h3>
+                    <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                        Tiene una sola entrada. Invierte el estado lógico: Lo que es Verdadero se vuelve Falso y viceversa.
+                    </p>
+                    <div class="bg-amber-50 p-3 rounded text-xs text-amber-800 font-medium">
+                        Analogía: El botón de "Silencio" (Mute). Si hay sonido (1), lo apaga (0).
                     </div>
                 </div>
-                <div class="bg-slate-50 border-2 rounded-[3rem] p-10 flex items-center justify-center">
+
+                <!-- Símbolo -->
+                <div class="card col-span-1 flex flex-col items-center justify-center">
+                    <svg viewBox="0 0 100 60" class="gate-svg mb-4">
+                        <path d="M30 15 L60 30 L30 45 Z" />
+                        <circle cx="65" cy="30" r="4" stroke-width="2" />
+                        <line x1="10" y1="30" x2="30" y2="30" />
+                        <line x1="70" y1="30" x2="100" y2="30" />
+                    </svg>
+                    <span class="mono text-xs text-slate-400">El círculo indica inversión</span>
+                </div>
+
+                <!-- Tabla -->
+                <div class="card col-span-1">
+                    <table class="truth-table">
+                        <thead><tr><th>A</th><th>Q (A')</th></tr></thead>
+                        <tbody>
+                            <tr class="bg-amber-50/30"><td>0</td><td class="result-1">1</td></tr>
+                            <tr><td>1</td><td class="result-0">0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: UNIVERSALES -->
+        <div class="slide">
+            <div class="max-w-4xl w-full">
+                <h2 class="text-3xl font-bold mb-8">Compuertas Universales</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- NAND -->
+                    <div class="card border-l-4 border-l-indigo-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-bold text-slate-800">NAND</h3>
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold uppercase">Not AND</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4">
+                            Es una AND con la salida invertida. Su salida es 0 solo si todas las entradas son 1.
+                        </p>
+                        <p class="text-xs text-slate-400 font-mono bg-slate-50 p-2 rounded">
+                            Es la más barata de fabricar y la más común en chips de memoria.
+                        </p>
+                    </div>
+
+                    <!-- NOR -->
+                    <div class="card border-l-4 border-l-rose-500">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-bold text-slate-800">NOR</h3>
+                            <span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold uppercase">Not OR</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4">
+                            Es una OR con la salida invertida. Su salida es 1 solo si todas las entradas son 0.
+                        </p>
+                        <p class="text-xs text-slate-400 font-mono bg-slate-50 p-2 rounded">
+                            Fundamental para crear lógica de control simple.
+                        </p>
+                    </div>
+                </div>
+                <p class="mt-8 text-center text-sm text-slate-500 italic">
+                    "Con cualquiera de estas dos, se puede construir cualquier circuito digital existente."
+                </p>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: LABORATORIO VIRTUAL -->
+        <div class="slide">
+            <h2 class="text-3xl font-bold mb-2 text-center">Laboratorio: Sistema de Seguridad</h2>
+            <p class="text-slate-500 mb-10 text-center">Simulación de una lógica AND</p>
+            
+            <div class="card max-w-3xl mx-auto w-full flex flex-col items-center py-10 bg-slate-50">
+                <div class="flex items-center gap-10 mb-8">
+                    <!-- Sensor 1 -->
+                    <div class="text-center cursor-pointer" onclick="toggleSwitch('A')">
+                        <div id="swA" class="w-16 h-24 bg-white border-2 border-slate-300 rounded shadow-sm transition-colors flex items-center justify-center">
+                            <span class="font-bold text-xs text-slate-400">OFF</span>
+                        </div>
+                        <p class="mt-2 text-xs font-bold uppercase tracking-wide">Sensor Puerta</p>
+                    </div>
+
+                    <span class="text-4xl text-slate-300">+</span>
+
+                    <!-- Sensor 2 -->
+                    <div class="text-center cursor-pointer" onclick="toggleSwitch('B')">
+                        <div id="swB" class="w-16 h-24 bg-white border-2 border-slate-300 rounded shadow-sm transition-colors flex items-center justify-center">
+                            <span class="font-bold text-xs text-slate-400">OFF</span>
+                        </div>
+                        <p class="mt-2 text-xs font-bold uppercase tracking-wide">Sensor Ventana</p>
+                    </div>
+
+                    <span class="text-4xl text-slate-300">=</span>
+
+                    <!-- Indicador -->
                     <div class="text-center">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">Ejemplo Visual</p>
-                        <!-- SVG complex function diagram -->
-                        <svg viewBox="0 0 200 120" class="w-full h-auto">
-                            <rect x="40" y="20" width="30" height="20" rx="4" fill="#3b82f6" opacity="0.3" />
-                            <rect x="40" y="80" width="30" height="20" rx="4" fill="#3b82f6" opacity="0.3" />
-                            <path d="M120 40 C140 40 160 50 180 60 C160 70 140 80 120 80 C130 70 130 50 120 40" fill="#1e40af" />
-                            <line x1="70" y1="30" x2="120" y2="50" stroke="#94a3b8" stroke-width="2" />
-                            <line x1="70" y1="90" x2="120" y2="70" stroke="#94a3b8" stroke-width="2" />
-                        </svg>
-                        <p class="text-sm font-bold text-blue-600 mt-6 mono uppercase">F = (A·B) + (C·D)</p>
+                        <div id="led" class="w-20 h-20 rounded-full bg-slate-200 border-4 border-slate-300 shadow-inner transition-all duration-300"></div>
+                        <p class="mt-4 text-xs font-bold uppercase tracking-wide text-slate-400" id="ledText">Sistema Inactivo</p>
                     </div>
                 </div>
+                <p class="text-xs text-slate-400 bg-white px-4 py-2 rounded-full border border-slate-200">
+                    Haz clic en los sensores para activarlos (Lógica AND)
+                </p>
             </div>
         </div>
 
-        <!-- DIAPOSITIVA 8: EJEMPLOS Y APLICACIONES -->
+        <!-- SLIDE 8: CIERRE -->
         <div class="slide">
-            <h2 class="text-4xl font-extrabold text-slate-900 mb-10">Aplicaciones Prácticas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="p-8 bg-slate-50 border rounded-3xl text-center card-hover transition-all">
-                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-shield-alt"></i></div>
-                    <h4 class="font-bold mb-2">Sistemas de Alarma</h4>
-                    <p class="text-xs text-slate-500 leading-loose">Uso de compuertas OR para activar una sirena si se abre la puerta O la ventana.</p>
+            <div class="text-center max-w-2xl">
+                <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-check text-white text-2xl"></i>
                 </div>
-                <div class="p-8 bg-slate-50 border rounded-3xl text-center card-hover transition-all">
-                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-lock"></i></div>
-                    <h4 class="font-bold mb-2">Cerraduras Digitales</h4>
-                    <p class="text-xs text-slate-500 leading-loose">Lógica AND: Solo abre si la clave es correcta Y se presiona el botón de inicio.</p>
-                </div>
-                <div class="p-8 bg-slate-50 border rounded-3xl text-center card-hover transition-all">
-                    <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-server"></i></div>
-                    <h4 class="font-bold mb-2">Unidades Aritméticas</h4>
-                    <p class="text-xs text-slate-500 leading-loose">Sistemas de control industrial y procesamiento de datos en CPUs.</p>
-                </div>
+                <h2 class="text-4xl font-bold mb-6 text-slate-900">Resumen Ejecutivo</h2>
+                <ul class="text-left space-y-4 text-slate-600 mb-10">
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-dot-circle text-blue-500 mt-1"></i>
+                        <span>Las compuertas son la base física de la toma de decisiones digitales.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-dot-circle text-blue-500 mt-1"></i>
+                        <span><strong>AND, OR, NOT</strong> son las funciones primarias.</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fas fa-dot-circle text-blue-500 mt-1"></i>
+                        <span><strong>NAND y NOR</strong> permiten la fabricación eficiente de chips complejos.</span>
+                    </li>
+                </ul>
+                <button onclick="goToSlide(0)" class="text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest">
+                    Reiniciar Presentación
+                </button>
             </div>
         </div>
 
-        <!-- DIAPOSITIVA 9: CIERRE -->
-        <div class="slide bg-slate-900 !text-white flex flex-col items-center justify-center text-center">
-            <h2 class="text-6xl font-black mb-8 tracking-tighter">Fin del Capítulo 2</h2>
-            <div class="w-24 h-2 bg-blue-500 rounded-full mb-12"></div>
-            <p class="text-slate-400 max-w-xl mx-auto mb-16 leading-relaxed">
-                Ahora comprendemos la naturaleza física de la lógica. En el siguiente capítulo, exploraremos las herramientas matemáticas para simplificar estos circuitos.
-            </p>
-            <button onclick="goToSlide(0)" class="px-10 py-4 bg-blue-600 rounded-full font-black hover:bg-blue-500 transition-all shadow-2xl uppercase tracking-widest text-sm">REINICIAR PRESENTACIÓN</button>
-        </div>
-
-    </div>
-
-    <!-- Barra de Controles Inferior -->
-    <div class="controls">
-        <button class="btn-nav" id="prevBtn" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
-        <div class="flex items-center text-white px-2 font-black text-sm mono">
-            <span id="slideCounter">1</span> / 9
-        </div>
-        <button class="btn-nav" id="nextBtn" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
     </div>
 
     <script>
-        // --- MOTOR DE DIAPOSITIVAS ---
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
-        const progressBar = document.getElementById('progressBar');
-        const slideCounter = document.getElementById('slideCounter');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
+        const totalSlides = slides.length;
+        
+        // Estado del laboratorio
+        let state = { A: false, B: false };
 
-        /**
-         * Actualiza el estado visual de la presentación
-         */
         function updateSlide() {
             slides.forEach((s, i) => {
-                s.classList.toggle('active', i === currentSlide);
+                s.classList.remove('active');
+                if (i === currentSlide) s.classList.add('active');
             });
             
-            // Barra de progreso
-            const percent = ((currentSlide + 1) / slides.length) * 100;
-            progressBar.style.width = percent + "%";
-            
-            // Contador UI
-            slideCounter.innerText = currentSlide + 1;
-
-            // Estados de botones
-            prevBtn.classList.toggle('disabled', currentSlide === 0);
-            nextBtn.classList.toggle('disabled', currentSlide === slides.length - 1);
-            
-            // Reiniciar scroll interno
-            slides[currentSlide].scrollTop = 0;
+            // Actualizar UI
+            document.getElementById('slideCounter').innerText = `${currentSlide + 1}/${totalSlides}`;
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
         }
 
-        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; updateSlide(); } }
-        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
-        function goToSlide(n) { currentSlide = n; updateSlide(); }
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
 
-        // Navegación teclado
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "ArrowRight" || e.key === " ") nextSlide();
-            if (e.key === "ArrowLeft") prevSlide();
-        });
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
 
-        // Pantalla completa
+        function goToSlide(n) {
+            currentSlide = n;
+            updateSlide();
+        }
+
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Error FS: ${err.message}`);
-                });
+                document.documentElement.requestFullscreen();
             } else {
                 if (document.exitFullscreen) document.exitFullscreen();
             }
         }
 
-        // Inicialización
+        // Lógica del Laboratorio
+        function toggleSwitch(id) {
+            state[id] = !state[id];
+            
+            // UI del botón
+            const btn = document.getElementById('sw' + id);
+            if (state[id]) {
+                btn.classList.replace('bg-white', 'bg-blue-600');
+                btn.classList.replace('border-slate-300', 'border-blue-700');
+                btn.innerHTML = '<span class="font-bold text-xs text-white">ON</span>';
+            } else {
+                btn.classList.replace('bg-blue-600', 'bg-white');
+                btn.classList.replace('border-blue-700', 'border-slate-300');
+                btn.innerHTML = '<span class="font-bold text-xs text-slate-400">OFF</span>';
+            }
+
+            // Lógica AND
+            const led = document.getElementById('led');
+            const text = document.getElementById('ledText');
+            
+            if (state.A && state.B) {
+                led.classList.replace('bg-slate-200', 'bg-green-500');
+                led.classList.replace('border-slate-300', 'border-green-600');
+                led.classList.add('shadow-lg', 'shadow-green-200');
+                text.innerText = "¡SISTEMA ACTIVO!";
+                text.classList.replace('text-slate-400', 'text-green-600');
+            } else {
+                led.classList.replace('bg-green-500', 'bg-slate-200');
+                led.classList.replace('border-green-600', 'border-slate-300');
+                led.classList.remove('shadow-lg', 'shadow-green-200');
+                text.innerText = "Sistema Inactivo";
+                text.classList.replace('text-green-600', 'text-slate-400');
+            }
+        }
+
+        // Keyboard Nav
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Init
         updateSlide();
     </script>
 </body>
